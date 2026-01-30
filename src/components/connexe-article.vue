@@ -261,7 +261,6 @@ $transition-ease: ease-out;
     &__author {
       color: var(--ac-accent);
       font-size: var(--ac-font-size-author);
-      text-transform: uppercase;
     }
 
     &__publisher {
