@@ -84,7 +84,7 @@ watch(() => [lang, topic], fetchRecommendedArticles)
           </header>
 
           <h2 id="article-title" class="article-card__title">
-            <a :href="currentArticle.url" class="article-card__link">
+            <a :href="currentArticle.url" class="article-card__link" target="_blank">
               {{ currentArticle.title }}
             </a>
           </h2>
