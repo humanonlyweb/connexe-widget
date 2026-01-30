@@ -1,10 +1,10 @@
-import { ref, computed, type Ref } from "vue";
+import { ref, computed, type MaybeRefOrGetter, toValue } from "vue";
 
-export function useCarousel(totalItems: Ref<number> | number) {
+export function useCarousel(totalItems: MaybeRefOrGetter<number>) {
   const currentIndex = ref(0);
   const direction = ref<"next" | "prev">("next");
 
-  const count = computed(() => (typeof totalItems === "number" ? totalItems : totalItems.value));
+  const count = computed(() => toValue(totalItems));
 
   const isPrevDisabled = computed(() => currentIndex.value === 0);
   const isNextDisabled = computed(() => currentIndex.value === count.value - 1);
@@ -31,7 +31,7 @@ export function useCarousel(totalItems: Ref<number> | number) {
 
     const distance = touchStartX.value - touchEndX.value;
     if (Math.abs(distance) < minSwipeDistance) return;
-    
+
     if (distance > 0) {
       next();
     } else {
@@ -40,7 +40,7 @@ export function useCarousel(totalItems: Ref<number> | number) {
   };
 
   const onTouchStart = (e: TouchEvent) => {
-    if (count.value <= 1) return;
+    if (count.value <= 1 || e.touches.length > 1) return;
 
     const touch = e.touches?.[0];
     if (!touch) return;
@@ -58,14 +58,19 @@ export function useCarousel(totalItems: Ref<number> | number) {
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (count.value <= 1) return; 
+    if (count.value <= 1) return;
 
-    if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+    if (["ArrowLeft", "ArrowRight"].includes(e.key)) {
       e.preventDefault();
-      prev();
-    } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-      e.preventDefault();
-      next();
+    }
+
+    switch (e.key) {
+      case "ArrowLeft":
+        prev();
+        break;
+      case "ArrowRight":
+        next();
+        break;
     }
   };
 

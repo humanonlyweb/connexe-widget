@@ -15,7 +15,7 @@ interface Developer {
   avatar: string
   intro: string
   skills: string[]
-  github: string
+  linkToPortfolio: string
 }
 
 const developers = ref<Developer[]>([])
@@ -31,10 +31,10 @@ const fetchDevelopers = async () => {
     }
 
     const response = await fetch(url.toString())
+    if (!response.ok) throw new Error('Network error')
+
     const data = await response.json()
-    
     developers.value = data.recommendations || []
-    
   } catch (error) {
     console.warn('[connexe-dev] could not fetch developers', error)
   }
@@ -50,10 +50,9 @@ const {
   onTouchStart,
   onTouchEnd,
   onKeyDown
-} = useCarousel(developers.value.length)
+} = useCarousel(() => developers.value.length)
 
 const currentDeveloper = computed(() => developers.value[currentIndex.value])
-
 const displayedSkills = computed(() => currentDeveloper.value?.skills.slice(0, 4) ?? [])
 
 onMounted(fetchDevelopers)
@@ -61,8 +60,9 @@ watch(() => [lang, skills, limit], fetchDevelopers)
 </script>
 
 <template>
-  <article class="dev-card" :data-theme="theme" aria-labelledby="dev-name" tabindex="0" data-badge="talent from the ecosystem"
-    @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd" @keydown="onKeyDown" v-if="developers.length > 0">
+  <article class="dev-card" :data-theme="theme" aria-labelledby="dev-name" tabindex="0"
+    data-badge="talent from the ecosystem" @touchstart.passive="onTouchStart" @touchend.passive="onTouchEnd"
+    @keydown="onKeyDown" v-if="developers.length > 0">
     <div class="dev-card__mask">
       <Transition :name="transitionName" mode="out-in">
         <div v-if="currentDeveloper" :key="currentDeveloper.id" class="dev-card__content">
@@ -71,7 +71,7 @@ watch(() => [lang, skills, limit], fetchDevelopers)
               loading="lazy" />
             <div class="dev-card__meta">
               <h2 id="dev-name" class="dev-card__name">
-                <a :href="currentDeveloper.github" class="dev-card__link" target="_blank" rel="noopener noreferrer">
+                <a :href="currentDeveloper.linkToPortfolio" class="dev-card__link" target="_blank" rel="noopener noreferrer">
                   {{ currentDeveloper.name }}
                 </a>
               </h2>
@@ -91,7 +91,8 @@ watch(() => [lang, skills, limit], fetchDevelopers)
     </div>
 
     <footer class="dev-card__footer">
-      <a href="https://github.com/humanonlyweb/connexe.dev" target="_blank" rel="noopener noreferrer" class="dev-card__action" aria-label="Add your profile to the network">
+      <a href="https://github.com/humanonlyweb/connexe.dev" target="_blank" rel="noopener noreferrer"
+        class="dev-card__action" aria-label="Add your profile to the network">
         Add your profile
       </a>
 
@@ -151,12 +152,12 @@ $transition-ease: ease-out;
 
   .dev-card {
     --dc-font-family: var(--connexe-dev-font-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
-    --dc-padding: var(--connexe-dev-padding, 20px);
+    --dc-padding: var(--connexe-dev-padding, 14px);
     --dc-radius: var(--connexe-dev-radius, 4px);
     --dc-pseudo-radius: var(--connexe-dev-pseudo-radius, 2px);
     --dc-avatar-radius: var(--connexe-dev-avatar-radius, 2px);
 
-    --dc-avatar-size: var(--connexe-dev-avatar-size, 48px);
+    --dc-avatar-size: var(--connexe-dev-avatar-size, 40px);
     --dc-gap: var(--connexe-dev-gap, 12px);
     --dc-gap-sm: var(--connexe-dev-gap-sm, 8px);
 
@@ -324,7 +325,7 @@ $transition-ease: ease-out;
     &__footer {
       display: flex;
       justify-content: space-between;
-      padding: 16px var(--dc-padding);
+      padding: var(--dc-padding);
       border-top: var(--dc-footer-border);
       background-color: var(--dc-footer-bg);
       color: var(--dc-text-muted);

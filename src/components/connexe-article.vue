@@ -12,6 +12,7 @@ const { theme = 'dark', lang = 'en', limit = 1, topic } = defineProps<{
 interface Article {
   id: string
   title: string
+  author: string
   url: string
 }
 
@@ -27,10 +28,10 @@ const fetchRecommendedArticles = async () => {
     url.searchParams.set('topic', topic)
 
     const response = await fetch(url.toString())
+    if (!response.ok) throw new Error('Network error')
+
     const data = await response.json()
-    
     articles.value = data.recommendations || []
-    
   } catch (error) {
     console.warn('[connexe-article] could not fetch recommended articles', error)
   }
@@ -46,14 +47,15 @@ const {
   onTouchStart,
   onTouchEnd,
   onKeyDown
-} = useCarousel(articles.value.length)
+} = useCarousel(() => articles.value.length)
 
 const currentArticle = computed(() => articles.value[currentIndex.value])
 
 const currentDomain = computed(() => {
   if (!currentArticle.value?.url) return ''
+
   try {
-    return new URL(currentArticle.value.url).hostname.replace('www.', '')
+    return new URL(currentArticle.value.url).hostname.replace(/^www\./, '')
   } catch {
     return ''
   }
@@ -72,7 +74,10 @@ watch(() => [lang, topic], fetchRecommendedArticles)
         <div v-if="currentArticle" :key="currentArticle.id" class="article-card__content">
           <header class="article-card__header">
             <div class="article-card__meta">
-              <p class="article-card__publisher" id="article-publisher">
+              <p class="article-card__author">
+                {{ currentArticle.author }}
+              </p>
+              <p class="article-card__publisher" id="article-publisher" v-if="currentDomain">
                 {{ currentDomain }}
               </p>
             </div>
@@ -88,8 +93,8 @@ watch(() => [lang, topic], fetchRecommendedArticles)
     </div>
 
     <footer class="article-card__footer">
-      <a href="https://github.com/humanonlyweb/connexe.dev" target="_blank" rel="noopener noreferrer" class="article-card__action"
-        aria-label="Contribute to this article">
+      <a href="https://github.com/humanonlyweb/connexe.dev" target="_blank" rel="noopener noreferrer"
+        class="article-card__action" aria-label="Contribute to this article">
         Contribute
       </a>
 
@@ -147,10 +152,9 @@ $transition-ease: ease-out;
 
   .article-card {
     --ac-font-family: var(--connexe-article-font-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
-    --ac-padding: var(--connexe-article-padding, 20px);
+    --ac-padding: var(--connexe-article-padding, 14px);
     --ac-radius: var(--connexe-article-radius, 4px);
     --ac-pseudo-radius: var(--connexe-article-pseudo-radius, 2px);
-
     --ac-font-size-title: var(--connexe-article-font-size-title, 20px);
     --ac-font-size-meta: var(--connexe-article-font-size-meta, 12px);
     --ac-font-size-badge: var(--connexe-article-font-size-badge, 9px);
@@ -290,7 +294,7 @@ $transition-ease: ease-out;
     &__footer {
       display: flex;
       justify-content: space-between;
-      padding: 16px var(--ac-padding);
+      padding: var(--ac-padding);
       border-top: var(--ac-footer-border);
       background-color: var(--ac-footer-bg);
       color: var(--ac-text-muted);
